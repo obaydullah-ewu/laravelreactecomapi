@@ -13,6 +13,12 @@ class CartController extends Controller
     {
         if (auth('sanctum')->check())
         {
+            if (auth('sanctum')->user()->role_as == 1){
+                return response()->json([
+                    'status' => 201,
+                    'message' => "You are not the user",
+                ]);
+            }
             $user_id = auth('sanctum')->user()->id;
             $product_id = $request->product_id;
             $product_qty = $request->product_qty;
@@ -22,8 +28,10 @@ class CartController extends Controller
             {
                 if(Cart::where('product_id', $product_id)->where('user_id', $user_id)->exists())
                 {
+                    $total = Cart::where('user_id', $user_id)->count();
                     return response()->json([
                         'status' => 409,
+                        'total_cart' => $total,
                         'message' => $productCheck->name . " Already Added to Cart",
                     ]);
                 }else{
@@ -32,9 +40,10 @@ class CartController extends Controller
                     $cartItem->product_id = $product_id;
                     $cartItem->product_qty = $product_qty;
                     $cartItem->save();
-
+                    $total = Cart::where('user_id', $user_id)->count();
                     return response()->json([
                         'status' => 200,
+                        'total_cart' => $total,
                         'message' => $productCheck->name . " Added to Cart",
                     ]);
                 }
@@ -107,11 +116,12 @@ class CartController extends Controller
             $user_id = auth('sanctum')->user()->id;
             $cartItem = Cart::where('id', $cart_id)->where('user_id', $user_id)->first();
             if ($cartItem){
-
                 $cartItem->delete();
+                $cartItems = Cart::where('user_id', $user_id)->get();
 
                 return response()->json([
                     'status' => 200,
+                    'cart' => $cartItems,
                     'message' => "Cart Item Remove Successfully",
                 ]);
             }else{

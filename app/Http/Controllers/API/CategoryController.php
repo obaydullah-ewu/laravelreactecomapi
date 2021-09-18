@@ -4,6 +4,7 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -120,6 +121,13 @@ class CategoryController extends Controller
     public function destroy($id)
     {
         $category = Category::find($id);
+        $products = Product::whereCategoryId($id)->get();
+        if (count($products) > 0){
+            return response()->json([
+                'status' => 401,
+                'message' => 'This category has many products, You can not delete'
+            ]);
+        }
         if ($category)
         {
             $category->delete();
